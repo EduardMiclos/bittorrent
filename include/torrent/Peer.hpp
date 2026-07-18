@@ -1,1 +1,4 @@
-class Peer {};
+class Peer {
+public:
+  Peer() = default;
+};

@@ -3,7 +3,7 @@
 
 class Url {
 public:
-  Url(){};
+  Url() = default;
   Url(std::string);
 
   std::string protocol;

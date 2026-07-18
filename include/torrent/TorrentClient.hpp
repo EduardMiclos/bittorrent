@@ -8,7 +8,7 @@ class TorrentClient {
 public:
   TorrentParser parser;
 
-  std::vector<Tracker> trackers;
+  Tracker tracker;
   std::vector<Peer> peers;
 
 public:

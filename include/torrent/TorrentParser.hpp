@@ -12,5 +12,5 @@ public:
 
   int load();
   int load(std::string);
-  std::string getTracker();
+  std::string getTrackerURL();
 };

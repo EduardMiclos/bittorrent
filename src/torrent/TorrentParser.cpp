@@ -41,7 +41,7 @@ int TorrentParser::load(std::string inputTorrent) {
   return this->load();
 };
 
-std::string TorrentParser::getTracker() {
+std::string TorrentParser::getTrackerURL() {
   if (auto *dict = std::get_if<bencode::dict>(&this->torrentContent.base())) {
     auto elem = this->torrentContent["announce"];
     return std::get<bencode::string>(elem);

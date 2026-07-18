@@ -1,3 +1,8 @@
+/*
+C++ Bencode library, credits to @jimporter
+https://github.com/jimporter/bencode.hpp
+*/
+
 #ifndef INC_BENCODE_HPP
 #define INC_BENCODE_HPP
 
