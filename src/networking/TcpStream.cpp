@@ -2,6 +2,7 @@
 #include <iostream>
 #include <netdb.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 int TcpStream::connect(const std::string &host, const std::string &port) {
   struct addrinfo addressHints {};
@@ -73,3 +74,38 @@ size_t TcpStream::writeAll(const std::string data) {
 
   return totalSent;
 };
+
+std::string TcpStream::readAll() {
+  if (this->socketFd < 0) {
+    std::cerr << "Cannot read from non-existent socket\n";
+    return "";
+  }
+
+  std::string returnString;
+  char buff[1024];
+
+  while (true) {
+    ssize_t bytesRead = recv(this->socketFd, buff, 1024, 0);
+    if (bytesRead < 0) {
+      std::cerr << "Error reading bytes\n";
+      break;
+    }
+
+    returnString.append(buff);
+
+    if (bytesRead == 0)
+      break;
+  }
+
+  return returnString;
+}
+
+void TcpStream::close() {
+  if (this->socketFd < 0) {
+    std::cerr << "Cannot close non-existent socket\n";
+    return;
+  }
+  ::close(this->socketFd);
+}
+
+TcpStream::~TcpStream() { this->close(); }

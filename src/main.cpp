@@ -8,9 +8,18 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include "networking/TcpStream.hpp"
+
 int main() {
-  TorrentClient torrentClient;
-  torrentClient.setTorrent("input/romanian_books.torrent");
+  // TorrentClient torrentClient;
+  // torrentClient.setTorrent("input/romanian_books.torrent");
+
+  TcpStream tcpStream;
+  tcpStream.connect("google.com", "80");
+  tcpStream.writeAll("GET / HTTP/1.1\r\nConnection: close\r\n\r\n");
+  std::string response = tcpStream.readAll();
+
+  std::cout << response;
 
   // TorrentParser torrentParser("input/romanian_books.torrent");
   // torrentParser.load();

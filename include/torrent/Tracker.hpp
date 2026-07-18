@@ -4,5 +4,6 @@
 class Tracker {
 public:
   Url url;
+  Tracker() = default;
   Tracker(std::string);
 };
