@@ -1,5 +1,5 @@
 #include "Bencode.hpp"
-#include "TorrentParser.hpp"
+#include "torrent/TorrentParser.hpp"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -34,12 +34,12 @@ int TorrentParser::load() {
 
   this->torrentContent = bencode::decode(buffer.str());
   return 0;
-}
+};
 
 int TorrentParser::load(std::string inputTorrent) {
   this->torrentPath = std::filesystem::path(inputTorrent);
   return this->load();
-}
+};
 
 std::string TorrentParser::getTracker() {
   if (auto *dict = std::get_if<bencode::dict>(&this->torrentContent.base())) {
@@ -48,4 +48,4 @@ std::string TorrentParser::getTracker() {
   }
 
   return "";
-}
+};

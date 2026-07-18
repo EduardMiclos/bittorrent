@@ -5,7 +5,7 @@ LDLIBS   ?= -ljsoncpp
 
 BUILD    ?= build
 TARGET   ?= btclient
-SRC := $(wildcard src/*.cpp src/torrent/*.cpp)
+SRC := $(wildcard src/*.cpp src/torrent/*.cpp src/networking/*.cpp)
 OBJ := $(patsubst src/%.cpp,$(BUILD)/%.o,$(SRC))
 LIB_SRC := $(filter-out src/main.cpp,$(SRC))
 LIB_OBJ := $(patsubst src/%.cpp,$(BUILD)/%.o,$(LIB_SRC))
@@ -32,7 +32,8 @@ build: dirs $(BUILD)/$(TARGET)
 dirs:
 	mkdir -p $(BUILD)
 	mkdir -p $(BUILD)/torrent
-	mkdir -p $(BUILD)/tests
+	mkdir -p $(BUILD)/networking
+	mkdir -p $(BUILD)/root
 
 $(BUILD)/$(TARGET): $(OBJ)
 	$(CXX) $(OBJ) $(LDLIBS) -o $@
