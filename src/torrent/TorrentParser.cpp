@@ -1,3 +1,4 @@
+#include "Bencode.hpp"
 #include "TorrentParser.hpp"
 #include <cstdio>
 #include <filesystem>
@@ -5,17 +6,11 @@
 #include <iostream>
 #include <string>
 
-TorrentParser::TorrentParser() {
-  this->bencode = Bencode();
-  this->torrentPath = std::filesystem::path();
-  this->torrentContent = "";
-}
+TorrentParser::TorrentParser() { this->torrentPath = std::filesystem::path(); };
 
 TorrentParser::TorrentParser(std::string inputTorrent) {
-  this->bencode = Bencode();
   this->torrentPath = std::filesystem::path(inputTorrent);
-  this->torrentContent = "";
-}
+};
 
 int TorrentParser::load() {
   if (this->torrentPath.extension() != ".torrent") {
@@ -37,8 +32,7 @@ int TorrentParser::load() {
   std::stringstream buffer;
   buffer << torrentFile.rdbuf();
 
-  this->torrentContent = buffer.str();
-
+  this->torrentContent = bencode::decode(buffer.str());
   return 0;
 }
 
@@ -48,14 +42,10 @@ int TorrentParser::load(std::string inputTorrent) {
 }
 
 std::string TorrentParser::getTracker() {
-  if (this->torrentContent == "") {
-    std::cerr << "No torrent loaded\n";
-    return "";
+  if (auto *dict = std::get_if<bencode::dict>(&this->torrentContent.base())) {
+    auto elem = this->torrentContent["announce"];
+    return std::get<bencode::string>(elem);
   }
 
-  Bencode parser = this->bencode;
-  parser = parser.decodeNext(this->torrentContent);
-
-  const auto &dict = std::get<Bencode::Dict>(parser.value());
-  return std::get<std::string>(dict.at("announce").value());
+  return "";
 }

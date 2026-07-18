@@ -4,8 +4,7 @@
 class TorrentParser {
 private:
   std::filesystem::path torrentPath;
-  std::string torrentContent;
-  Bencode bencode;
+  bencode::data torrentContent;
 
 public:
   TorrentParser();

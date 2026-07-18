@@ -11,21 +11,19 @@
 #include <sys/types.h>
 
 int main() {
-  TorrentParser torrentParser("input/ubuntu-22.04.5-desktop-amd64.iso.torrent");
+  TorrentParser torrentParser("input/romanian_books.torrent");
   torrentParser.load();
 
   std::string trackerURL = torrentParser.getTracker();
-  int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-  if (clientSocket < 0) {
-    std::cerr << "Faild to create the socket\n";
-    return -1;
-  }
+  std::cout << URLParser::getHost(trackerURL) << '\n';
 
-  struct addrinfo addressHints, *targetAddress;
-  memset(&addressHints, sizeof(addressHints), 0);
-  addressHints.ai_family = AF_INET;
+  std::cout << URLParser::getProtocol(trackerURL) << '\n';
+  std::cout << URLParser::getResource(trackerURL) << '\n';
+
+  struct addrinfo addressHints {
+  }, *targetAddress;
+  addressHints.ai_family = AF_UNSPEC;
   addressHints.ai_socktype = SOCK_STREAM;
-  addressHints.ai_flags = AI_PASSIVE;
   getaddrinfo(URLParser::getHost(trackerURL).c_str(),
               URLParser::getProtocol(trackerURL).c_str(), &addressHints,
               &targetAddress);
@@ -43,44 +41,21 @@ int main() {
     return -3;
   }
 
-  // struct addrinfo hints;
-  // struct addrinfo *res;
+  std::string request = "GET /" + URLParser::getResource(trackerURL) +
+                        " HTTP/1.1\r\n" +
+                        "Host: " + URLParser::getHost(trackerURL) +
+                        "\r\nConnection: close\r\n\r\n";
 
-  // memset(&hints, 0, sizeof(hints));
-  // hints.ai_family = AF_INET;
-  // hints.ai_socktype = SOCK_STREAM;
-  // hints.ai_flags = AI_PASSIVE;
+  send(sockfd, request.c_str(), request.length(), 0);
+  std::cout << "request sent";
 
-  // std::cout << "ready to connect\n";
-  // getaddrinfo(trackerURL.c_str(), "https", &hints, &res);
+  char inbuff[3222];
+  if (recv(sockfd, &inbuff, 3222, 0) == -1) {
+    std::cerr << "error reading socket content\n";
+    return -3;
+  }
 
-  // std::cout << "got addr info\n";
-  // int sockfd = socket(res->ai_family, res->ai_socktype,
-  // res->ai_protocol); std::cout << "ready to connect\n";
-
-  // if (connect(sockfd, res->ai_addr, res->ai_addrlen) == -1) {
-  //   std::cerr << "error connecting to domain\n";
-  //   return -2;
-  // }
-
-  // std::cout << "connection succeded!\n";
-
-  // const char request[] = "GET /announce HTTP/1.1\r\n"
-  //                        "Host: torrent.ubuntu.com\r\n"
-  //                        "Connection: close\r\n"
-  //                        "\r\n";
-
-  // std::size_t totalSent = 0;
-  // const std::size_t requestLength = std::strlen(request);
-  // send(sockfd, request, requestLength, 0);
-
-  // char inbuff[3222];
-  // if (recv(sockfd, &inbuff, 3222, 0) == -1) {
-  //   std::cerr << "error reading socket content\n";
-  //   return -3;
-  // }
-
-  // std::cout << inbuff;
+  std::cout << inbuff;
 
   return 0;
 }
