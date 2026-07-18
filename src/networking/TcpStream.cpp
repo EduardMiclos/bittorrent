@@ -7,9 +7,14 @@ int TcpStream::connect(const std::string &host, const std::string &port) {
   struct addrinfo addressHints {};
   struct addrinfo *targetAddress;
 
+  // accept both IPv4 and IPv6
   addressHints.ai_family = AF_UNSPEC;
+
+  // TCP stream
   addressHints.ai_socktype = SOCK_STREAM;
 
+  // the port defines the protocol, so the second argument can be either the
+  // service or the port [e.g.: 80 means http, 443 means https]
   short returnCode = getaddrinfo(host.c_str(), port.c_str(), &addressHints,
                                  (struct addrinfo **)&targetAddress);
   if (returnCode != 0) {
@@ -35,4 +40,36 @@ int TcpStream::connect(const std::string &host, const std::string &port) {
 
   this->socketFd = socketFd;
   return 0;
+};
+
+size_t TcpStream::writeAll(const std::string data) {
+  if (this->socketFd < 0) {
+    std::cerr << "Cannot write to non-existent socket\n";
+    return 0;
+  }
+
+  size_t totalSent = 0;
+
+  while (totalSent < data.size()) {
+
+    // making use of string pointers & index value to send next chunk of data
+    ssize_t bytesSent = send(this->socketFd, data.data() + totalSent,
+                             data.size() - totalSent, 0);
+    if (bytesSent < 0) {
+      std::cerr << "Error sending bytes\n";
+      break;
+    }
+
+    // this might also occur if internet goes down, will probably need
+    // to treat it differently in the future but it's fine for now
+    // [I trust my ISP]
+    if (bytesSent == 0) {
+      std::cerr << "Socket closed during data transmission\n";
+      break;
+    }
+
+    totalSent += bytesSent;
+  }
+
+  return totalSent;
 };

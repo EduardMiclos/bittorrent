@@ -8,6 +8,6 @@ public:
   TcpStream() = default;
 
   int connect(const std::string &host, const std::string &port);
-  void writeAll(const std::string &data);
+  size_t writeAll(const std::string data);
   std::string readAll();
 };
