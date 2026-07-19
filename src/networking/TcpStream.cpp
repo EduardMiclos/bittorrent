@@ -109,4 +109,30 @@ void TcpStream::close() {
   ::close(this->socketFd);
 }
 
+// this will prove to be useful when talking to peers
+std::string TcpStream::readExact(const size_t nBytes) {
+  if (this->socketFd < 0) {
+    std::cerr << "Cannot read from non-existent socket\n";
+    return "";
+  }
+
+  std::string returnString;
+  char buff[1024];
+
+  while (true) {
+    ssize_t bytesRead = recv(this->socketFd, buff, nBytes, 0);
+    if (bytesRead < 0) {
+      std::cerr << "Error reading bytes\n";
+      break;
+    }
+
+    returnString.append(buff);
+
+    if ((bytesRead == 0) || (returnString.size() >= nBytes))
+      break;
+  }
+
+  return returnString;
+}
+
 TcpStream::~TcpStream() { this->close(); }
