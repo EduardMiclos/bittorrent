@@ -37,7 +37,7 @@ int TcpStream::connect(const std::string &host, const short &port) {
                          targetAddress->ai_addrlen);
 
   if (conn < 0) {
-    std::cout << "Error connecting to the address\n";
+    std::cerr << "Error connecting to the address\n";
     return -205;
   }
 
@@ -84,7 +84,7 @@ std::string TcpStream::readAll() {
   }
 
   std::string returnString;
-  char buff[1024];
+  char buff[4096];
 
   while (true) {
     ssize_t bytesRead = recv(this->socketFd, buff, 1024, 0);
@@ -93,10 +93,10 @@ std::string TcpStream::readAll() {
       break;
     }
 
-    returnString.append(buff);
-
     if (bytesRead == 0)
       break;
+
+    returnString.append(buff, static_cast<std::size_t>(bytesRead));
   }
 
   return returnString;
@@ -117,7 +117,7 @@ std::string TcpStream::readExact(const size_t nBytes) {
   }
 
   std::string returnString;
-  char buff[1024];
+  char buff[4096];
 
   while (true) {
     ssize_t bytesRead = recv(this->socketFd, buff, nBytes, 0);
@@ -126,9 +126,12 @@ std::string TcpStream::readExact(const size_t nBytes) {
       break;
     }
 
-    returnString.append(buff);
+    if (bytesRead == 0)
+      break;
 
-    if ((bytesRead == 0) || (returnString.size() >= nBytes))
+    returnString.append(buff, static_cast<std::size_t>(bytesRead));
+
+    if (returnString.size() >= nBytes)
       break;
   }
 
