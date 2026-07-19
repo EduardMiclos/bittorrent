@@ -1,10 +1,11 @@
 #include "networking/TcpStream.hpp"
+#include <cstdlib>
 #include <iostream>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-int TcpStream::connect(const std::string &host, const std::string &port) {
+int TcpStream::connect(const std::string &host, const short &port) {
   struct addrinfo addressHints {};
   struct addrinfo *targetAddress;
 
@@ -16,8 +17,9 @@ int TcpStream::connect(const std::string &host, const std::string &port) {
 
   // the port defines the protocol, so the second argument can be either the
   // service or the port [e.g.: 80 means http, 443 means https]
-  short returnCode = getaddrinfo(host.c_str(), port.c_str(), &addressHints,
-                                 (struct addrinfo **)&targetAddress);
+  short returnCode =
+      getaddrinfo(host.c_str(), std::to_string(port).c_str(), &addressHints,
+                  (struct addrinfo **)&targetAddress);
   if (returnCode != 0) {
     std::cerr << "Error fetching address information for: " << host << ":"
               << port << '\n';
@@ -102,7 +104,6 @@ std::string TcpStream::readAll() {
 
 void TcpStream::close() {
   if (this->socketFd < 0) {
-    std::cerr << "Cannot close non-existent socket\n";
     return;
   }
   ::close(this->socketFd);

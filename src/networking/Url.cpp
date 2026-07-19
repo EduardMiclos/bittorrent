@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "networking/Url.hpp"
 #include <stdexcept>
 
@@ -28,5 +30,5 @@ Url::Url(std::string url) {
     this->host = hostSubstring.substr(0, portStart);
   }
 
-  this->resource = hostSubstring.substr(resourceStart + 1);
+  this->resource = hostSubstring.substr(resourceStart);
 }

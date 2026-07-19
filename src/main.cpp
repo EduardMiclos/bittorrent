@@ -1,3 +1,4 @@
+#include "networking/HttpClient.hpp"
 #include "torrent/TorrentClient.hpp"
 
 #include <arpa/inet.h>
@@ -8,18 +9,29 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "networking/TcpStream.hpp"
+// #include "networking/TcpStream.hpp"
 
 int main() {
-  // TorrentClient torrentClient;
-  // torrentClient.setTorrent("input/romanian_books.torrent");
+  TorrentClient torrentClient;
+  torrentClient.setTorrent("input/romanian_books.torrent");
+  Tracker tracker = torrentClient.tracker;
 
-  TcpStream tcpStream;
-  tcpStream.connect("google.com", "80");
-  tcpStream.writeAll("GET / HTTP/1.1\r\nConnection: close\r\n\r\n");
-  std::string response = tcpStream.readAll();
+  HttpClient httpClient{};
+  // Url url = Url("http://google.com/");
+  // std::cout << url.host << " " << url.port << " " << url.resource;
 
-  std::cout << response;
+  HttpResponse response = httpClient.get(tracker.url);
+
+  // TcpStream tcpStream;
+  // tcpStream.connect("google.com", "80");
+  // tcpStream.writeAll("GET / HTTP/1.1\r\nConnection: close\r\n\r\n");
+  // std::string response = tcpStream.readAll();
+
+  // std::cout << tracker.url.host << " " << tracker.url.resource;
+  // tcpStream.connect(tracker.url.host, std::to_string(tracker.url.port));
+  // tcpStream.writeAll("GET /" + tracker.url.resource + " HTTP/1.1\r\nHost:
+  // " + tracker.url.host + "\r\nConnection: close\r\n\r\n"); std::string
+  // response = tcpStream.readAll(); std::cout << response;
 
   // TorrentParser torrentParser("input/romanian_books.torrent");
   // torrentParser.load();
