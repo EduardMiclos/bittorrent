@@ -25,6 +25,8 @@ struct HttpResponse {
   std::string statusMessage;
   std::vector<HttpHeader> headers;
   std::string body;
+
+  HttpResponse(std::string);
 };
 
 struct HttpRequest {

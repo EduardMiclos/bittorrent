@@ -1,6 +1,7 @@
 #include "networking/HttpClient.hpp"
 #include <cstddef>
-#include <iostream>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 
 [[nodiscard]] std::string HttpRequest::toString() const {
@@ -19,21 +20,77 @@
   return requestString;
 }
 
+HttpResponse::HttpResponse(std::string response) {
+  const std::size_t headersEnd = response.find("\r\n\r\n");
+
+  if (headersEnd == std::string::npos) {
+    throw std::runtime_error(
+        "Invalid HTTP response: missing header terminator");
+  }
+
+  const std::string headerSection = response.substr(0, headersEnd);
+  this->body = response.substr(headersEnd + 4);
+
+  std::istringstream headerStream(headerSection);
+  std::string statusLine;
+
+  if (!std::getline(headerStream, statusLine))
+    throw std::runtime_error("Invalid HTTP response: missing status line");
+
+  if (!statusLine.empty() && statusLine.back() == '\r')
+    statusLine.pop_back();
+
+  std::istringstream statusStream(statusLine);
+  std::string httpVersion;
+
+  if (!(statusStream >> httpVersion >> this->statusCode))
+    throw std::runtime_error("Invalid HTTP response status line");
+
+  std::getline(statusStream, this->statusMessage);
+
+  if (!this->statusMessage.empty() && this->statusMessage.front() == ' ')
+    statusMessage.erase(0, 1);
+
+  std::string line;
+
+  while (std::getline(headerStream, line)) {
+    if (!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+
+    const std::size_t separator = line.find(':');
+
+    if (separator == std::string::npos) {
+      continue;
+    }
+
+    std::string name = line.substr(0, separator);
+    std::string value = line.substr(separator + 1);
+
+    if (!value.empty() && value.front() == ' ') {
+      value.erase(0, 1);
+    }
+
+    this->headers.emplace_back(std::move(name), std::move(value));
+  }
+}
+
 HttpResponse HttpClient::get(const Url &url,
                              const std::vector<UrlParameter> &parameters) {
 
   this->stream = TcpStream();
   this->stream.connect(url.host, url.port);
 
+  // should look something like this: url.com?key1=value1&key2=value2&...
   std::string parameterString;
   for (std::size_t i = 0; i < parameters.size(); ++i) {
+
+    // tbd: encode url parameters
     parameterString += (i == 0 ? "?" : "&");
     parameterString += parameters[i].first;
     parameterString += "=";
     parameterString += parameters[i].second;
   }
-
-  std::cout << "params string: " + parameterString << '\n';
 
   HttpRequest httpRequest{};
   httpRequest.httpVersion = "HTTP/1.1";
@@ -44,10 +101,8 @@ HttpResponse HttpClient::get(const Url &url,
 
   this->stream.writeAll(httpRequest.toString());
 
-  HttpResponse httpResponse{};
   std::string returnString = this->stream.readAll();
-
-  std::cout << "RETURN STRING\n" << returnString << '\n';
+  HttpResponse httpResponse(returnString);
 
   this->stream.close();
   return httpResponse;

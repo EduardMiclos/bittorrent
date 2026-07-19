@@ -21,6 +21,7 @@ int main() {
   // std::cout << url.host << " " << url.port << " " << url.resource;
 
   HttpResponse response = httpClient.get(tracker.url);
+  std::cout << response.statusMessage;
 
   // TcpStream tcpStream;
   // tcpStream.connect("google.com", "80");
