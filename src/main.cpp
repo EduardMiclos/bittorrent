@@ -4,7 +4,6 @@
 #include <arpa/inet.h>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -13,15 +12,16 @@
 
 int main() {
   TorrentClient torrentClient;
-  torrentClient.setTorrent("input/romanian_books.torrent");
-  Tracker tracker = torrentClient.tracker;
+  torrentClient.setTorrent("input/alicesadventures19033gut.torrent");
 
-  HttpClient httpClient{};
+  // Tracker tracker = torrentClient.tracker;
+
+  // HttpClient httpClient{};
   // Url url = Url("http://google.com/");
   // std::cout << url.host << " " << url.port << " " << url.resource;
 
-  HttpResponse response = httpClient.get(tracker.url);
-  std::cout << response.statusMessage;
+  // HttpResponse response = httpClient.get(tracker.url, [ {"info_hash" : } ]);
+  // std::cout << response.statusMessage;
 
   // TcpStream tcpStream;
   // tcpStream.connect("google.com", "80");

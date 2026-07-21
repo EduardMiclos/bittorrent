@@ -1,3 +1,4 @@
+#include "networking/Encode.hpp"
 #include "networking/HttpClient.hpp"
 #include <cstddef>
 #include <sstream>
@@ -81,15 +82,15 @@ HttpResponse HttpClient::get(const Url &url,
   this->stream = TcpStream();
   this->stream.connect(url.host, url.port);
 
-  // should look something like this: url.com?key1=value1&key2=value2&...
+  // should look something like this (without the host part):
+  // url.com?key1=value1&key2=value2&...
   std::string parameterString;
   for (std::size_t i = 0; i < parameters.size(); ++i) {
 
-    // tbd: encode url parameters
     parameterString += (i == 0 ? "?" : "&");
-    parameterString += parameters[i].first;
+    parameterString += encodeURIComponent(parameters[i].first);
     parameterString += "=";
-    parameterString += parameters[i].second;
+    parameterString += encodeURIComponent(parameters[i].second);
   }
 
   HttpRequest httpRequest{};

@@ -1,7 +1,7 @@
 CXX ?= g++
 CXXFLAGS ?= -std=c++20 -Wall -Wextra -Wpedantic -Iinclude -g -O0
 LDFLAGS  ?=
-LDLIBS   ?= -ljsoncpp
+LDLIBS   ?= -ljsoncpp -lcrypto
 
 BUILD    ?= build
 TARGET   ?= bittorrent

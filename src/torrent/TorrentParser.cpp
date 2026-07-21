@@ -1,4 +1,5 @@
 #include "Bencode.hpp"
+#include "Utils.hpp"
 #include "torrent/TorrentParser.hpp"
 #include <cstdio>
 #include <filesystem>
@@ -49,3 +50,14 @@ std::string TorrentParser::getTrackerURL() {
 
   return "";
 };
+
+std::string TorrentParser::getInfoHash() {
+  if (auto *dict = std::get_if<bencode::dict>(&this->torrentContent.base())) {
+    auto info = this->torrentContent["info"];
+
+    std::string encodedInfo = bencode::encode(info);
+    return sha1(encodedInfo);
+  }
+
+  return "";
+}

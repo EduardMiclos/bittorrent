@@ -13,4 +13,5 @@ public:
   int load();
   int load(std::string);
   std::string getTrackerURL();
+  std::string getInfoHash();
 };
