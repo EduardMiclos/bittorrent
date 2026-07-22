@@ -30,7 +30,7 @@ private:
   std::string uid;
   int uploaded;
   int downloaded;
-  int left;
+  long long left;
   bool compact;
 
   int listeningPort;

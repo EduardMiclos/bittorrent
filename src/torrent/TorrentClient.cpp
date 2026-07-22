@@ -40,6 +40,8 @@ bool TorrentClient::interogateTracker(std::string_view trackerEvent) {
     return false;
   }
 
+  bencode::data decodedResponse = bencode::decode(response.body);
+
   std::cout << response.body << '\n';
   return true;
 }
@@ -49,6 +51,7 @@ bool TorrentClient::setTorrent(std::string torrentPath) {
 
   this->tracker = Tracker(this->parser.getTrackerURL());
   this->infoHash = this->parser.getInfoHash();
+  this->left = this->parser.getFilesLength();
 
   bool interogateSuccess = this->interogateTracker(TrackerEvent::Started);
   if (!interogateSuccess) {

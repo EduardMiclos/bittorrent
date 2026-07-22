@@ -14,4 +14,5 @@ public:
   int load(std::string);
   std::string getTrackerURL();
   std::string getInfoHash();
+  long long getFilesLength();
 };

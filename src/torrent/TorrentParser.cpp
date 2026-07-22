@@ -1,6 +1,7 @@
 #include "Bencode.hpp"
 #include "Utils.hpp"
 #include "torrent/TorrentParser.hpp"
+#include <algorithm>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -60,4 +61,25 @@ std::string TorrentParser::getInfoHash() {
   }
 
   return "";
+}
+
+long long TorrentParser::getFilesLength() {
+  long long totalLength = 0;
+
+  auto info = this->torrentContent["info"];
+
+  if (auto *infoDict = std::get_if<bencode::dict>(&info.base())) {
+    if (infoDict->find("length") != infoDict->end()) {
+      // single file torrent
+      totalLength = std::get<bencode::integer>(info["length"]);
+    } else {
+      // multi-files torrent
+      // accumulate lengths from all files
+      bencode::list files = std::get<bencode::list>(info["files"]);
+      for (const auto &f : files)
+        totalLength += std::get<bencode::integer>(f.at("length"));
+    }
+  }
+
+  return totalLength;
 }
