@@ -73,7 +73,7 @@ long long TorrentParser::getFilesLength() {
       // single file torrent
       totalLength = std::get<bencode::integer>(info["length"]);
     } else {
-      // multi-files torrent
+      // multi-file torrent
       // accumulate lengths from all files
       bencode::list files = std::get<bencode::list>(info["files"]);
       for (const auto &f : files)
