@@ -1,3 +1,5 @@
+#pragma once
+
 #include "networking/TcpStream.hpp"
 #include "networking/Url.hpp"
 

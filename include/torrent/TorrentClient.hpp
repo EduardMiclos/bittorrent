@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Peer.hpp"
 #include "TorrentParser.hpp"
 #include "Tracker.hpp"
@@ -35,9 +37,6 @@ private:
 
   int listeningPort;
   std::vector<Peer> peers;
-
-private:
-  bool interogateTracker(std::string_view trackerEvent);
 
 public:
   TorrentClient();

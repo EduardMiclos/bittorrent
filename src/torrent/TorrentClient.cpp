@@ -16,34 +16,7 @@ TorrentClient::TorrentClient() {
   // responses; best to always be set to true
   this->compact = true;
   this->listeningPort = torrentPorts[0];
-}
-
-bool TorrentClient::interogateTracker(std::string_view trackerEvent) {
-  HttpClient httpClient{};
-
-  std::cout << this->tracker.url.protocol << "://" << this->tracker.url.host
-            << ":" << this->tracker.url.port << "/"
-            << this->tracker.url.resource << '\n';
-
-  HttpResponse response = httpClient.get(
-      this->tracker.url,
-      {UrlParameter("info_hash", this->infoHash),
-       UrlParameter("peer_id", this->uid),
-       UrlParameter("port", std::to_string(this->listeningPort)),
-       UrlParameter("uploaded", std::to_string(this->uploaded)),
-       UrlParameter("downloaded", std::to_string(this->downloaded)),
-       UrlParameter("left", std::to_string(this->left)),
-       UrlParameter("compact", this->compact ? "1" : "0"),
-       UrlParameter("event", trackerEvent)});
-
-  if (response.statusCode != 200) {
-    return false;
-  }
-
-  bencode::data decodedResponse = bencode::decode(response.body);
-
-  std::cout << response.body << '\n';
-  return true;
+  this->peers = {};
 }
 
 bool TorrentClient::setTorrent(std::string torrentPath) {
@@ -53,11 +26,22 @@ bool TorrentClient::setTorrent(std::string torrentPath) {
   this->infoHash = this->parser.getInfoHash();
   this->left = this->parser.getFilesLength();
 
-  bool interogateSuccess = this->interogateTracker(TrackerEvent::Started);
-  if (!interogateSuccess) {
-    std::cerr << "Failed interogating the torrent tracker\n";
+  std::vector<Peer> peers = this->tracker.announce(
+      {UrlParameter("info_hash", this->infoHash),
+       UrlParameter("peer_id", this->uid),
+       UrlParameter("port", std::to_string(this->listeningPort)),
+       UrlParameter("uploaded", std::to_string(this->uploaded)),
+       UrlParameter("downloaded", std::to_string(this->downloaded)),
+       UrlParameter("left", std::to_string(this->left)),
+       UrlParameter("compact", this->compact ? "1" : "0"),
+       UrlParameter("event", TrackerEvent::Started)});
+
+  if (!peers.size()) {
+    std::cerr << "Failed announcing the torrent tracker\n";
     return false;
   }
+
+  this->peers = peers;
 
   return true;
 }
