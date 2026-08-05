@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-int TcpStream::connect(const std::string &host, const short &port) {
+int TcpStream::connect(const std::string &host, uint16_t port) {
   struct addrinfo addressHints {};
   struct addrinfo *targetAddress;
 

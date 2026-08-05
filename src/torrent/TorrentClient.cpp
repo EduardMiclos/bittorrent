@@ -20,6 +20,8 @@ TorrentClient::TorrentClient() {
 }
 
 bool TorrentClient::setTorrent(std::string torrentPath) {
+  std::cout << "Torrent client initialized...\n";
+
   this->parser.load(torrentPath);
 
   this->tracker = Tracker(this->parser.getTrackerURL());
@@ -36,12 +38,14 @@ bool TorrentClient::setTorrent(std::string torrentPath) {
        UrlParameter("compact", this->compact ? "1" : "0"),
        UrlParameter("event", TrackerEvent::Started)});
 
+  std::cout << "piece length: " << this->parser.getPieceLength();
+  std::cout << "\npiece hashes:" << this->parser.getPieceHashes() << '\n';
+
   if (!peers.size()) {
-    std::cerr << "Failed announcing the torrent tracker\n";
+    std::cerr << "The traker didn't return any peer.\n";
     return false;
   }
 
   this->peers = peers;
-
   return true;
 }

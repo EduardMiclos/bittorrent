@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <string>
 
 class Url {
@@ -8,6 +9,6 @@ public:
 
   std::string protocol;
   std::string host;
-  int port;
+  uint16_t port;
   std::string resource;
 };

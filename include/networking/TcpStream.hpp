@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <string>
 
 class TcpStream {
@@ -9,7 +10,7 @@ public:
   TcpStream() = default;
   ~TcpStream();
 
-  int connect(const std::string &host, const short &port);
+  int connect(const std::string &host, uint16_t port);
   size_t writeAll(const std::string data);
   std::string readAll();
   std::string readExact(const size_t nBytes);

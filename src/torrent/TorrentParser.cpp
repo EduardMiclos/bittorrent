@@ -15,6 +15,7 @@ TorrentParser::TorrentParser(std::string inputTorrent) {
 };
 
 int TorrentParser::load() {
+  std::cout << "Loading torrent file...\n";
   if (this->torrentPath.extension() != ".torrent") {
     std::cerr << "Incorrect file type. Must be a torrent file [.torrent]\n";
     return -1;
@@ -34,7 +35,10 @@ int TorrentParser::load() {
   std::stringstream buffer;
   buffer << torrentFile.rdbuf();
 
+  std::cout << "Torrent file loaded.\n";
   this->torrentContent = bencode::decode(buffer.str());
+  std::cout << "Torrent file decoded.\n";
+
   return 0;
 };
 
@@ -82,4 +86,28 @@ long long TorrentParser::getFilesLength() {
   }
 
   return totalLength;
+}
+
+long long TorrentParser::getPieceLength() {
+  long long pieceLength = 0;
+  auto info = this->torrentContent["info"];
+
+  if (auto *infoDict = std::get_if<bencode::dict>(&info.base())) {
+    if (infoDict->find("piece length") != infoDict->end())
+      pieceLength = std::get<bencode::integer>(info["piece length"]);
+  }
+
+  return pieceLength;
+}
+
+std::string TorrentParser::getPieceHashes() {
+  std::string pieceHashes{};
+  auto info = this->torrentContent["info"];
+
+  if (auto *infoDict = std::get_if<bencode::dict>(&info.base())) {
+    if (infoDict->find("pieces") != infoDict->end())
+      pieceHashes = std::get<bencode::string>(info["pieces"]);
+  }
+
+  return pieceHashes;
 }

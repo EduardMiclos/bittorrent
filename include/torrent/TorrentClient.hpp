@@ -4,6 +4,7 @@
 #include "TorrentParser.hpp"
 #include "Tracker.hpp"
 
+#include <cstdint>
 #include <string>
 
 namespace TrackerEvent {
@@ -30,12 +31,12 @@ private:
   std::string infoHash;
 
   std::string uid;
-  int uploaded;
-  int downloaded;
+  int64_t uploaded;
+  int64_t downloaded;
   long long left;
   bool compact;
 
-  int listeningPort;
+  uint16_t listeningPort;
   std::vector<Peer> peers;
 
 public:

@@ -1,4 +1,5 @@
 #include "networking/Url.hpp"
+#include <cstdint>
 #include <stdexcept>
 
 Url::Url(std::string url) {
@@ -24,7 +25,7 @@ Url::Url(std::string url) {
   } else {
     std::string portSubstring = hostSubstring.substr(portStart + 1);
 
-    this->port = stoi(portSubstring.substr(0, resourceStart));
+    this->port = std::uint16_t(stoi(portSubstring.substr(0, resourceStart)));
     this->host = hostSubstring.substr(0, portStart);
   }
 
