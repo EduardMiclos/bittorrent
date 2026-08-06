@@ -1,7 +1,7 @@
 #include "Bencode.hpp"
+#include "Config.hpp"
 #include "Utils.hpp"
 #include "torrent/TorrentParser.hpp"
-#include <algorithm>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -39,6 +39,11 @@ int TorrentParser::load() {
   this->torrentContent = bencode::decode(buffer.str());
   std::cout << "Torrent file decoded.\n";
 
+  this->totalSize = this->_getTotalSize();
+  this->pieceSize = this->_getPieceSize();
+  this->pieceHashes = this->_getPieceHashes();
+  this->pieceCount = this->_getPieceCount();
+
   return 0;
 };
 
@@ -67,7 +72,35 @@ std::string TorrentParser::getInfoHash() {
   return "";
 }
 
-long long TorrentParser::getFilesLength() {
+std::size_t TorrentParser::getPieceSizeAt(int pieceIndex) {
+  if (pieceIndex < 0)
+    return 0;
+
+  if (pieceIndex < this->pieceCount - 1)
+    return this->pieceSize;
+
+  if (pieceIndex == this->pieceCount - 1)
+    return this->totalSize - (this->pieceCount - 1) * this->pieceSize;
+
+  return 0;
+}
+
+std::string TorrentParser::getPieceHashAt(int pieceIndex) {
+  if (pieceIndex < 0)
+    return "";
+
+  if (pieceIndex >= this->pieceCount)
+    return "";
+
+  return this->pieceHashes.substr(pieceIndex * PIECE_HASH_SIZE,
+                                  PIECE_HASH_SIZE);
+}
+
+int TorrentParser::getPieceCount() { return this->pieceCount; }
+
+std::size_t TorrentParser::getTotalSize() { return this->totalSize; }
+
+std::size_t TorrentParser::_getTotalSize() {
   long long totalLength = 0;
 
   auto info = this->torrentContent["info"];
@@ -88,8 +121,8 @@ long long TorrentParser::getFilesLength() {
   return totalLength;
 }
 
-long long TorrentParser::getPieceLength() {
-  long long pieceLength = 0;
+std::size_t TorrentParser::_getPieceSize() {
+  std::size_t pieceLength = 0;
   auto info = this->torrentContent["info"];
 
   if (auto *infoDict = std::get_if<bencode::dict>(&info.base())) {
@@ -100,7 +133,11 @@ long long TorrentParser::getPieceLength() {
   return pieceLength;
 }
 
-std::string TorrentParser::getPieceHashes() {
+int TorrentParser::_getPieceCount() {
+  return this->pieceHashes.size() / PIECE_HASH_SIZE;
+}
+
+std::string TorrentParser::_getPieceHashes() {
   std::string pieceHashes{};
   auto info = this->torrentContent["info"];
 

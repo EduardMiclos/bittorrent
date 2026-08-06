@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Peer.hpp"
+#include "Piece.hpp"
 #include "TorrentParser.hpp"
 #include "Tracker.hpp"
 
@@ -38,6 +39,7 @@ private:
 
   uint16_t listeningPort;
   std::vector<Peer> peers;
+  std::vector<Piece> pieces;
 
 public:
   TorrentClient();

@@ -1,11 +1,13 @@
+#include "Config.hpp"
 #include "Utils.hpp"
 #include "networking/HttpClient.hpp"
+#include "torrent/Piece.hpp"
 #include "torrent/TorrentClient.hpp"
 #include "torrent/Tracker.hpp"
 
 TorrentClient::TorrentClient() {
   this->parser = TorrentParser();
-  this->uid = generateRandomString(20);
+  this->uid = generateRandomString(CLIENT_UID_SIZE);
   this->uploaded = 0;
   this->downloaded = 0;
   this->left = 0;
@@ -26,7 +28,11 @@ bool TorrentClient::setTorrent(std::string torrentPath) {
 
   this->tracker = Tracker(this->parser.getTrackerURL());
   this->infoHash = this->parser.getInfoHash();
-  this->left = this->parser.getFilesLength();
+  this->left = this->parser.getTotalSize();
+
+  for (int i = 0; i < this->parser.getPieceCount(); i++)
+    this->pieces.emplace_back(this->parser.getPieceSizeAt(i),
+                              this->parser.getPieceHashAt(i), i);
 
   std::vector<Peer> peers = this->tracker.announce(
       {UrlParameter("info_hash", this->infoHash),
@@ -37,9 +43,6 @@ bool TorrentClient::setTorrent(std::string torrentPath) {
        UrlParameter("left", std::to_string(this->left)),
        UrlParameter("compact", this->compact ? "1" : "0"),
        UrlParameter("event", TrackerEvent::Started)});
-
-  std::cout << "piece length: " << this->parser.getPieceLength();
-  std::cout << "\npiece hashes:" << this->parser.getPieceHashes() << '\n';
 
   if (!peers.size()) {
     std::cerr << "The traker didn't return any peer.\n";
