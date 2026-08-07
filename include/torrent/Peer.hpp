@@ -11,4 +11,5 @@ public:
 public:
   Peer() = default;
   Peer(std::string_view peerBytes);
+  Peer(std::string ipAddress, uint16_t port);
 };

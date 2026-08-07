@@ -10,9 +10,11 @@ public:
   TcpStream() = default;
   ~TcpStream();
 
+  bool isOpen;
+
   int connect(const std::string &host, uint16_t port);
   size_t writeAll(const std::string data);
   std::string readAll();
   std::string readExact(const size_t nBytes);
-  void close();
+  bool close();
 };

@@ -42,6 +42,7 @@ int TcpStream::connect(const std::string &host, uint16_t port) {
   }
 
   this->socketFd = socketFd;
+  this->isOpen = true;
   return 0;
 };
 
@@ -102,11 +103,13 @@ std::string TcpStream::readAll() {
   return returnString;
 }
 
-void TcpStream::close() {
+bool TcpStream::close() {
   if (this->socketFd < 0) {
-    return;
+    return false;
   }
   ::close(this->socketFd);
+  this->isOpen = false;
+  return true
 }
 
 // this will prove to be useful when talking to peers

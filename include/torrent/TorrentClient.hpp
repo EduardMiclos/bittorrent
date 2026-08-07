@@ -31,7 +31,6 @@ private:
   Tracker tracker;
   std::string infoHash;
 
-  std::string uid;
   int64_t uploaded;
   int64_t downloaded;
   long long left;
@@ -42,6 +41,8 @@ private:
   std::vector<Piece> pieces;
 
 public:
+  std::string uid;
+
   TorrentClient();
   bool setTorrent(std::string torrentPath);
   void startDownload();

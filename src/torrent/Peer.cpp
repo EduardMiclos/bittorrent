@@ -12,3 +12,8 @@ Peer::Peer(std::string_view peerBytes) {
   this->port = std::uint16_t(std::uint8_t(peerBytes[4] << 8) |
                              std::uint8_t(peerBytes[5]));
 }
+
+Peer::Peer(std::string ipAddress, uint16_t port) {
+  this->ipAddress = ipAddress;
+  this->port = port;
+}

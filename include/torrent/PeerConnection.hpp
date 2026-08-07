@@ -1,3 +1,4 @@
+#include "networking/TcpStream.hpp"
 #include "torrent/Peer.hpp"
 
 // based on: https://www.bittorrent.org/beps/bep_0003.html
@@ -37,8 +38,17 @@ inline constexpr std::byte Cancel{8};
 class PeerConnection {
 private:
   Peer peer;
+  TcpStream stream;
+
+  bool open();
+  bool close();
+
+  std::size_t getNextMessageLength();
+  std::string receiveMessage();
+  bool sendMessage(std::string message);
 
 public:
-  PeerConnection(){};
   PeerConnection(Peer);
+
+  bool handshake(std::string clientUid, std::string infoHash);
 };
