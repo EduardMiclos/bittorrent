@@ -109,7 +109,7 @@ bool TcpStream::close() {
   }
   ::close(this->socketFd);
   this->isOpen = false;
-  return true
+  return true;
 }
 
 // this will prove to be useful when talking to peers

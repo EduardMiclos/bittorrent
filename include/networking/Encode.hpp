@@ -1,5 +1,4 @@
-#ifndef ENCODE_HPP_
-#define ENCODE_HPP_
+#pragma once
 
 #include <cctype>
 #include <iomanip>
@@ -73,5 +72,3 @@ inline std::string decodeURIComponent(std::string_view input) {
 
   return decoded;
 }
-
-#endif

@@ -36,7 +36,7 @@ inline constexpr std::byte Cancel{8};
 }; // namespace PeerConnectionStatus
 
 class PeerConnection {
-private:
+public:
   Peer peer;
   TcpStream stream;
 

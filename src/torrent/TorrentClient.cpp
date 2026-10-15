@@ -1,7 +1,6 @@
 #include "Config.hpp"
 #include "Utils.hpp"
 #include "networking/HttpClient.hpp"
-#include "torrent/Piece.hpp"
 #include "torrent/TorrentClient.hpp"
 #include "torrent/Tracker.hpp"
 

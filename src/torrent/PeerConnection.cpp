@@ -10,7 +10,7 @@ bool PeerConnection::open() {
   }
 
   this->stream = TcpStream();
-  if (this->stream.connect(this->peer.ipAddress, this->peer.port))
+  if (!this->stream.connect(this->peer.ipAddress, this->peer.port))
     return true;
   std::cerr << "Failed connecting to peer...\n";
   return false;
@@ -32,8 +32,9 @@ std::size_t PeerConnection::getNextMessageLength() {
   }
   std::string lengthStr = this->stream.readExact(4);
 
-  uint32_t length = (lengthStr[0] << 24) | (lengthStr[1] << 16) |
-                    (lengthStr[2] << 8) | lengthStr[3];
+  uint32_t length = (uint8_t(lengthStr[0]) << 24) |
+                    (uint8_t(lengthStr[1]) << 16) |
+                    (uint8_t(lengthStr[2]) << 8) | uint8_t(lengthStr[3]);
   return length;
 }
 
@@ -70,15 +71,18 @@ bool PeerConnection::sendMessage(std::string message) {
 }
 
 bool PeerConnection::handshake(std::string clientUid, std::string infoHash) {
+  if (!this->open())
+    return false;
+
   std::string handshakeBytes = std::string(1, char(19)) +
                                "BitTorrent protocol" + std::string(8, '\0') +
                                infoHash + clientUid;
 
-  // this->sendMessage(handshakeBytes);
+  this->stream.writeAll(handshakeBytes);
+  std::string peerResponse = this->stream.readExact(68);
 
-  std::string reply = this->receiveMessage();
-
-  if (reply.compare(28, 20, infoHash) != 0) {
+  if (peerResponse.size() != 68 &&
+      peerResponse.compare(28, 20, infoHash) != 0) {
     std::cout << "Peer returned a wrong info hash...";
     return false;
   }
