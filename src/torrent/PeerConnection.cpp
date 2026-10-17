@@ -1,4 +1,5 @@
 #include "torrent/PeerConnection.hpp"
+#include <iomanip>
 #include <iostream>
 
 PeerConnection::PeerConnection(Peer peer) { this->peer = peer; }
@@ -50,22 +51,42 @@ std::string PeerConnection::receiveMessage() {
     std::cerr << "Peer response truncated";
     return "";
   }
+
   return message;
 }
 
-bool PeerConnection::sendMessage(std::string message) {
+bool PeerConnection::sendMessage(char messageId, std::string payload) {
   if (!this->stream.isOpen) {
     std::cerr << "Cannot send message if connection is closed!";
     return false;
   }
-  uint32_t messageLength = message.size();
 
-  char length[] = {char(messageLength >> 24), char(messageLength >> 16),
-                   char(messageLength >> 8), char(messageLength)};
+  uint32_t messageLength = 1 + payload.size();
+  std::cout << "message length: " << messageLength << '\n';
 
   // bittorrent protocol message buffer between peers always starts with the
   // length of the message
-  message = std::string(length, 4) + message;
+  char message_length[4];
+
+  std::string message;
+  message.reserve(4 + messageLength);
+  message.push_back(static_cast<char>((messageLength >> 24)));
+
+  message.push_back(static_cast<char>((messageLength >> 16)));
+
+  message.push_back(static_cast<char>((messageLength >> 8)));
+
+  message.push_back(static_cast<char>((messageLength)));
+
+  std::cout << "length in bytes: " << message_length[0] << '\n';
+  std::cout << "message id: " << messageId << '\n';
+
+  message += messageId + payload;
+  for (unsigned char byte : message) {
+    std::cout << std::hex << std::setw(2) << std::setfill('0')
+              << static_cast<int>(byte) << ' ';
+  }
+
   size_t bytesSent = this->stream.writeAll(message);
   return bytesSent == message.size();
 }
@@ -74,6 +95,8 @@ bool PeerConnection::handshake(std::string clientUid, std::string infoHash) {
   if (!this->open())
     return false;
 
+  std::cout << "Initiating handshake...\n";
+
   std::string handshakeBytes = std::string(1, char(19)) +
                                "BitTorrent protocol" + std::string(8, '\0') +
                                infoHash + clientUid;
@@ -81,10 +104,17 @@ bool PeerConnection::handshake(std::string clientUid, std::string infoHash) {
   this->stream.writeAll(handshakeBytes);
   std::string peerResponse = this->stream.readExact(68);
 
+  std::cout << "peer response: " << peerResponse << '\n';
   if (peerResponse.size() != 68 &&
       peerResponse.compare(28, 20, infoHash) != 0) {
-    std::cout << "Peer returned a wrong info hash...";
+    std::cerr << "Peer returned a wrong info hash...";
     return false;
+  }
+
+  std::cout << "Received " << peerResponse.size() << " bytes\n";
+
+  for (unsigned char byte : peerResponse) {
+    std::printf("%02X ", byte);
   }
 
   return true;

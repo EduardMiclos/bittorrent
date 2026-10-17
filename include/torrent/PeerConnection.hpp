@@ -6,7 +6,7 @@
 namespace PeerConnectionStatus {
 
 // not willing to send data
-inline constexpr std::byte Choke{0}; // no payload
+inline constexpr char Choke{0}; // no payload
 
 // ready to send data
 inline constexpr std::byte Unchoke{1}; // no payload
@@ -45,7 +45,7 @@ public:
 
   std::size_t getNextMessageLength();
   std::string receiveMessage();
-  bool sendMessage(std::string message);
+  bool sendMessage(char messageId, std::string payload);
 
 public:
   PeerConnection(Peer);
