@@ -1,9 +1,10 @@
-#include "torrent/Peer.hpp"
-#include "torrent/PeerConnection.hpp"
+// #include "torrent/Peer.hpp"
+// #include "torrent/PeerConnection.hpp"
 #include "torrent/TorrentClient.hpp"
 #include <fstream>
 #include <iostream>
 
+/*
 void peerCommunication() {
   TorrentClient torrentClient;
   TorrentParser parser;
@@ -23,21 +24,13 @@ void peerCommunication() {
                              : "Handshake failed!\n");
 
   if (isOk) {
-    bool messageSent = peerConnection.sendMessage(2, "");
+    bool messageSent = peerConnection.sendStatus(PeerStatus::Interested);
 
     if (messageSent) {
       std::cout << "message sent successfully!\n";
     }
 
     std::string response = peerConnection.receiveMessage();
-
-    for (unsigned char byte : response) {
-      std::cout << std::hex << std::setw(2) << std::setfill('0')
-                << static_cast<int>(byte) << ' ';
-
-      // std::cout << (static_cast<int>(byte) == 5) << '\n';
-    }
-
     std::vector<unsigned char> bitfield(response.begin(), response.end());
 
     if (bitfield.at(0) == 5) {
@@ -84,13 +77,15 @@ void peerCommunication() {
 
       requestMessage.push_back(static_cast<char>((pieceSize)));
 
-      bool pieceRequest = peerConnection.sendMessage(6, requestMessage);
+      bool pieceRequest =
+          peerConnection.sendMessage(PeerStatus::Request, requestMessage);
 
       std::string blockResponse = peerConnection.receiveMessage();
 
       sleep(1);
 
-      pieceRequest = peerConnection.sendMessage(6, requestMessage);
+      pieceRequest =
+          peerConnection.sendMessage(PeerStatus::Request, requestMessage);
 
       sleep(1);
 
@@ -135,9 +130,10 @@ void peerCommunication() {
     std::cout << (bitfield.at(0) == 5) << '\n';
   }
 }
+*/
 
 int main() {
-  peerCommunication();
+  // peerCommunication();
 
   // torrentClient.setTorrent("input/alicesadventures19033gut.torrent");
   // torrentClient.setTorrent("/tmp/test.torrent");

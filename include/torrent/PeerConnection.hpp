@@ -3,10 +3,10 @@
 
 // based on: https://www.bittorrent.org/beps/bep_0003.html
 
-namespace PeerConnectionStatus {
+namespace PeerStatus {
 
 // not willing to send data
-inline constexpr char Choke{0}; // no payload
+inline constexpr std::byte Choke{0}; // no payload
 
 // ready to send data
 inline constexpr std::byte Unchoke{1}; // no payload
@@ -33,22 +33,26 @@ inline constexpr std::byte Piece{7};
 
 // send towards the end of download
 inline constexpr std::byte Cancel{8};
-}; // namespace PeerConnectionStatus
+}; // namespace PeerStatus
 
 class PeerConnection {
 public:
-  Peer peer;
   TcpStream stream;
+  std::string ipAddress;
+  uint16_t port;
+  std::byte lastStatus;
 
   bool open();
   bool close();
 
   std::size_t getNextMessageLength();
   std::string receiveMessage();
-  bool sendMessage(char messageId, std::string payload);
+  bool sendMessage(std::byte messageId, std::string payload);
+  bool sendStatus(std::byte status);
+  std::byte receiveStatus();
 
 public:
-  PeerConnection(Peer);
+  PeerConnection(std::string ipAddress, uint16_t port);
 
   bool handshake(std::string clientUid, std::string infoHash);
 };

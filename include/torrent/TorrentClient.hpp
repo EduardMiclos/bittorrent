@@ -1,12 +1,14 @@
 #pragma once
 
 #include "Peer.hpp"
+#include "PeerConnection.hpp"
 #include "Piece.hpp"
 #include "TorrentParser.hpp"
 #include "Tracker.hpp"
 
 #include <cstdint>
 #include <string>
+#include <thread>
 
 namespace TrackerEvent {
 
@@ -38,12 +40,19 @@ private:
 
   uint16_t listeningPort;
   std::vector<Peer> peers;
+  std::vector<PeerConnection> peerConnections;
+
   std::vector<Piece> pieces;
+
+  std::vector<std::jthread> peerThreads;
 
 public:
   std::string uid;
 
   TorrentClient();
+  void setPeers(std::vector<Peer> peers);
   bool setTorrent(std::string torrentPath);
+
+  void perPeerDownload(Peer peer);
   void startDownload();
 };

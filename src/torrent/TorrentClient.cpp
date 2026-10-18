@@ -3,6 +3,7 @@
 #include "networking/HttpClient.hpp"
 #include "torrent/TorrentClient.hpp"
 #include "torrent/Tracker.hpp"
+#include <thread>
 
 TorrentClient::TorrentClient() {
   this->parser = TorrentParser();
@@ -18,6 +19,52 @@ TorrentClient::TorrentClient() {
   this->compact = true;
   this->listeningPort = torrentPorts[0];
   this->peers = {};
+  this->pieces = {};
+}
+
+void TorrentClient::setPeers(std::vector<Peer> peers) { this->peers = peers; }
+
+void TorrentClient::perPeerDownload(Peer peer) {
+
+  PeerConnection peerConnection = PeerConnection(peer.ipAddress, peer.port);
+
+  // initiate handshake with peer
+  bool handshakeSuccess = peerConnection.handshake(this->uid, this->infoHash);
+  if (handshakeSuccess) {
+  }
+}
+
+void TorrentClient::startDownload() {
+  if (this->peers.size() == 0) {
+    std::cerr << "No peers available for download.\n";
+    return;
+  }
+
+  for (Peer peer : this->peers) {
+    // start a new thread for each peer connection
+    this->peerThreads.emplace_back([this, peer]() { perPeerDownload(peer); });
+
+    PeerConnection peerConnection = PeerConnection(peer.ipAddress, peer.port);
+
+    // initiate handshake with peer
+    bool handshakeSuccess = peerConnection.handshake(this->uid, this->infoHash);
+
+    if (handshakeSuccess) {
+      // start listening for peer messages
+      // start new thread
+
+      // advertise as interested for downloading
+      peerConnection.sendStatus(PeerStatus::Interested);
+      std::byte status = peerConnection.receiveStatus();
+
+      // good news, peer is willing to transfer pieces
+      if (status == PeerStatus::Unchoke) {
+        // ask for piece
+      }
+    } else {
+      peerConnection.close();
+    }
+  }
 }
 
 bool TorrentClient::setTorrent(std::string torrentPath) {
