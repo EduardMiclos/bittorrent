@@ -30,8 +30,31 @@ void TorrentClient::perPeerDownload(Peer peer) {
 
   // initiate handshake with peer
   bool handshakeSuccess = peerConnection.handshake(this->uid, this->infoHash);
-  if (handshakeSuccess) {
+  if (!handshakeSuccess) {
+    std::cout << "Error during peer handshake [peer: " << peer.ipAddress << ":" << peer.port << "]\n";
+    return;
   }
+
+  while (peerConnection.isConnected()) {
+    PeerMessage message = peerConnection.receiveMessage();
+
+    swich(message.type) {
+    case PeerMessageType::Bitfield:
+      break;
+    }
+  }
+
+  // start listening for peer messages on new thread
+
+  // advertise as interested for downloading
+  peerConnection.sendStatus(PeerStatus::Interested);
+  std::byte status = peerConnection.receiveStatus();
+  peerConnection.lastStatus = status;
+  if (status == PeerStatus::Unchoke) {
+    // ask for piece
+  }
+
+  peerConnection.close();
 }
 
 void TorrentClient::startDownload() {
@@ -77,21 +100,17 @@ bool TorrentClient::setTorrent(std::string torrentPath) {
   this->left = this->parser.getTotalSize();
 
   for (int i = 0; i < this->parser.getPieceCount(); i++)
-    this->pieces.emplace_back(this->parser.getPieceSizeAt(i),
-                              this->parser.getPieceHashAt(i), i);
+    this->pieces.emplace_back(this->parser.getPieceSizeAt(i), this->parser.getPieceHashAt(i), i);
 
   std::vector<Peer> peers = this->tracker.announce(
-      {UrlParameter("info_hash", this->infoHash),
-       UrlParameter("peer_id", this->uid),
+      {UrlParameter("info_hash", this->infoHash), UrlParameter("peer_id", this->uid),
        UrlParameter("port", std::to_string(this->listeningPort)),
        UrlParameter("uploaded", std::to_string(this->uploaded)),
-       UrlParameter("downloaded", std::to_string(this->downloaded)),
-       UrlParameter("left", std::to_string(this->left)),
-       UrlParameter("compact", this->compact ? "1" : "0"),
-       UrlParameter("event", TrackerEvent::Started)});
+       UrlParameter("downloaded", std::to_string(this->downloaded)), UrlParameter("left", std::to_string(this->left)),
+       UrlParameter("compact", this->compact ? "1" : "0"), UrlParameter("event", TrackerEvent::Started)});
 
   if (!peers.size()) {
-    std::cerr << "The traker didn't return any peer.\n";
+    std::cerr << "The tracker didn't return any peer.\n";
     return false;
   }
 

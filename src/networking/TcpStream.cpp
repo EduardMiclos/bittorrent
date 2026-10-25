@@ -18,23 +18,19 @@ int TcpStream::connect(const std::string &host, uint16_t port) {
   // the port defines the protocol, so the second argument can be either the
   // service or the port [e.g.: 80 means http, 443 means https]
   short returnCode =
-      getaddrinfo(host.c_str(), std::to_string(port).c_str(), &addressHints,
-                  (struct addrinfo **)&targetAddress);
+      getaddrinfo(host.c_str(), std::to_string(port).c_str(), &addressHints, (struct addrinfo **)&targetAddress);
   if (returnCode != 0) {
-    std::cerr << "Error fetching address information for: " << host << ":"
-              << port << '\n';
+    std::cerr << "Error fetching address information for: " << host << ":" << port << '\n';
     return returnCode;
   }
 
-  int socketFd = socket(targetAddress->ai_family, targetAddress->ai_socktype,
-                        targetAddress->ai_protocol);
+  int socketFd = socket(targetAddress->ai_family, targetAddress->ai_socktype, targetAddress->ai_protocol);
   if (socketFd < 0) {
     std::cerr << "Error creating the socket\n";
     return -200;
   }
 
-  short conn = ::connect(socketFd, (struct sockaddr *)targetAddress->ai_addr,
-                         targetAddress->ai_addrlen);
+  short conn = ::connect(socketFd, (struct sockaddr *)targetAddress->ai_addr, targetAddress->ai_addrlen);
 
   if (conn < 0) {
     std::cerr << "Error connecting to the address\n";
@@ -46,7 +42,7 @@ int TcpStream::connect(const std::string &host, uint16_t port) {
   return 0;
 };
 
-size_t TcpStream::writeAll(const std::string data) {
+size_t TcpStream::writeAll(const std::string &data) {
   if (this->socketFd < 0) {
     std::cerr << "Cannot write to non-existent socket\n";
     return 0;
@@ -57,8 +53,7 @@ size_t TcpStream::writeAll(const std::string data) {
   while (totalSent < data.size()) {
 
     // making use of string pointers & index value to send next chunk of data
-    ssize_t bytesSent = send(this->socketFd, data.data() + totalSent,
-                             data.size() - totalSent, 0);
+    ssize_t bytesSent = send(this->socketFd, data.data() + totalSent, data.size() - totalSent, 0);
     if (bytesSent < 0) {
       std::cerr << "Error sending bytes\n";
       break;
@@ -77,6 +72,29 @@ size_t TcpStream::writeAll(const std::string data) {
 
   return totalSent;
 };
+
+size_t TcpStream::writeAllBytes(const std::vector<std::byte> &data) {
+  if (this->socketFd < 0) {
+    std::cerr << "Cannot write to non-existent socket\n";
+    return 0;
+  }
+
+  size_t totalSent = 0;
+  while (totalSent < data.size()) {
+    ssize_t bytesSent = send(this->socketFd, data.data() + totalSent, data.size() - totalSent, 0);
+    if (bytesSent < 0) {
+      std::cerr << "Error sending bytes\n";
+      break;
+    }
+
+    if (bytesSent == 0)
+      break;
+
+    totalSent += static_cast<size_t>(bytesSent);
+  }
+
+  return totalSent;
+}
 
 std::string TcpStream::readAll() {
   if (this->socketFd < 0) {
@@ -139,6 +157,38 @@ std::string TcpStream::readExact(const size_t nBytes) {
   }
 
   return returnString;
+}
+
+std::vector<std::byte> TcpStream::readExactBytes(const size_t nBytes) {
+  if (this->socketFd < 0) {
+    std::cerr << "Cannot read from non-existent socket\n";
+    return {};
+  }
+
+  std::vector<std::byte> returnBytes;
+  returnBytes.reserve(nBytes);
+
+  std::byte buff[4096];
+
+  while (returnBytes.size() < nBytes) {
+    size_t remaining = nBytes - returnBytes.size();
+    size_t toRead = std::min(remaining, sizeof(buff));
+
+    ssize_t bytesRead = recv(this->socketFd, buff, toRead, 0);
+    if (bytesRead < 0) {
+      std::cerr << "Error reading bytes\n";
+      break;
+    }
+
+    if (bytesRead == 0) {
+      std::cerr << "Peer disconnected\n";
+      break;
+    }
+
+    returnBytes.insert(returnBytes.end(), buff, buff + toRead);
+  }
+
+  return returnBytes;
 }
 
 TcpStream::~TcpStream() { this->close(); }

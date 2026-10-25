@@ -1,58 +1,28 @@
 #include "networking/TcpStream.hpp"
 #include "torrent/Peer.hpp"
-
-// based on: https://www.bittorrent.org/beps/bep_0003.html
-
-namespace PeerStatus {
-
-// not willing to send data
-inline constexpr std::byte Choke{0}; // no payload
-
-// ready to send data
-inline constexpr std::byte Unchoke{1}; // no payload
-
-// interested in data
-inline constexpr std::byte Interested{2}; // no payload
-
-// not interested in data
-inline constexpr std::byte Uninterested{3}; // no payload
-
-// has a specific data piece
-inline constexpr std::byte Have{4};
-
-// which pieces are available
-inline constexpr std::byte Bitfield{
-    5}; // payload: a bitfield with each index that downloader has sent set to 1
-        // and the rest set to 0
-
-// ask for a block
-inline constexpr std::byte Request{6};
-
-// a block of data
-inline constexpr std::byte Piece{7};
-
-// send towards the end of download
-inline constexpr std::byte Cancel{8};
-}; // namespace PeerStatus
+#include "torrent/PeerMessage.hpp"
 
 class PeerConnection {
 public:
   TcpStream stream;
   std::string ipAddress;
   uint16_t port;
-  std::byte lastStatus;
+
+  bool peerChoking = true;
+  bool amInterested = false;
 
   bool open();
   bool close();
 
   std::size_t getNextMessageLength();
-  std::string receiveMessage();
-  bool sendMessage(std::byte messageId, std::string payload);
+  PeerMessage receiveMessage();
+  bool sendMessage(PeerMessage &message);
   bool sendStatus(std::byte status);
   std::byte receiveStatus();
 
 public:
   PeerConnection(std::string ipAddress, uint16_t port);
 
+  bool isConnected();
   bool handshake(std::string clientUid, std::string infoHash);
 };

@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-class Peer;
-
 enum class ChunkState { Missing, Requested, Downloaded };
 
 class Piece {
