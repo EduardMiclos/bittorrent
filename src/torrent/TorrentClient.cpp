@@ -24,7 +24,7 @@ TorrentClient::TorrentClient() {
 
 void TorrentClient::setPeers(std::vector<Peer> peers) { this->peers = peers; }
 
-void TorrentClient::perPeerDownload(Peer peer) {
+void TorrentClient::perPeerDownload(Peer &peer) {
 
   PeerConnection peerConnection = PeerConnection(peer.ipAddress, peer.port);
 
@@ -38,8 +38,21 @@ void TorrentClient::perPeerDownload(Peer peer) {
   while (peerConnection.isConnected()) {
     PeerMessage message = peerConnection.receiveMessage();
 
-    swich(message.type) {
+    switch (message.messageType) {
     case PeerMessageType::Bitfield:
+      peerConnection.updateBitfield(message.payload);
+      break;
+
+    case PeerMessageType::Have:
+      // tbd
+      peerConnection.handleHave();
+      break;
+
+    case PeerMessageType::Choke:
+      peerConnection.peerChoking = true;
+      break;
+    case PeerMessageType::Unchoke:
+      peerConnection.peerChoking = false;
       break;
     }
   }

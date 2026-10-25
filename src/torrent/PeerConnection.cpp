@@ -1,5 +1,6 @@
 #include "torrent/PeerConnection.hpp"
 #include <iostream>
+#include <stdexcept>
 
 PeerConnection::PeerConnection(std::string ipAddress, uint16_t port) {
   this->ipAddress = ipAddress;
@@ -85,4 +86,34 @@ bool PeerConnection::handshake(std::string clientUid, std::string infoHash) {
     return false;
   }
   return true;
+}
+
+bool PeerConnection::hasPiece(uint32_t pieceIndex) const { return this->availablePieces[pieceIndex]; }
+
+void PeerConnection::updateBitfield(const std::vector<std::byte> &payload) {
+  if (!this->availablePieces.size())
+    this->availablePieces.assign(payload.size() * 8, false);
+
+  short multiplier = 1;
+  for (auto bitfieldByte : payload) {
+    uint8_t byteInt = static_cast<uint8_t>(bitfieldByte);
+
+    short i = 1;
+    while (byteInt > 0) {
+      this->availablePieces.at(8 * multiplier - i) = ((byteInt & 1) != 0);
+      byteInt = (byteInt >> 1);
+      i++;
+    }
+
+    multiplier += 1;
+  }
+}
+
+void PeerConnection::handleHave(const uint32_t pieceIndex) {
+  if (pieceIndex < 0 || pieceIndex >= this->availablePieces.size()) {
+    throw std::invalid_argument("Piece index out of range");
+    return;
+  }
+
+  this->availablePieces[pieceIndex] = true;
 }

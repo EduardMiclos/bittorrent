@@ -37,10 +37,11 @@ inline constexpr std::byte Cancel{8};
 
 class PeerMessage {
 private:
+  bool isValidMessageType(std::byte messageType);
+
+public:
   std::byte messageType;
   std::vector<std::byte> payload;
-
-  bool isValidMessageType(std::byte messageType);
 
 public:
   PeerMessage();

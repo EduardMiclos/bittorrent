@@ -23,8 +23,7 @@ inline constexpr std::string_view Completed = "completed";
 
 } // namespace TrackerEvent
 
-constexpr std::array<std::uint16_t, 5> torrentPorts{6881, 6882, 6883, 6884,
-                                                    6885};
+constexpr std::array<std::uint16_t, 5> torrentPorts{6881, 6882, 6883, 6884, 6885};
 
 class TorrentClient {
 private:
@@ -53,6 +52,6 @@ public:
   void setPeers(std::vector<Peer> peers);
   bool setTorrent(std::string torrentPath);
 
-  void perPeerDownload(Peer peer);
+  void perPeerDownload(Peer &peer);
   void startDownload();
 };
