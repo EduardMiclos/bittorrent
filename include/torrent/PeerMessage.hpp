@@ -45,6 +45,8 @@ public:
 
 public:
   PeerMessage();
+  PeerMessage(std::byte messageType);
   PeerMessage(const std::vector<std::byte> &message);
+  PeerMessage(std::byte messageType, std::vector<std::byte> message);
   std::vector<std::byte> serialize();
 };

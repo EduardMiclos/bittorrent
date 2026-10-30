@@ -1,4 +1,5 @@
 
+#include "Utils.hpp"
 #include "torrent/PeerMessage.hpp"
 #include <stdexcept>
 #include <stdint.h>
@@ -21,6 +22,11 @@ bool PeerMessage::isValidMessageType(std::byte messageType) {
   }
 }
 
+PeerMessage::PeerMessage(std::byte messageType) {
+  this->messageType = messageType;
+  this->payload = {};
+}
+
 PeerMessage::PeerMessage(const std::vector<std::byte> &message) {
   if (message.empty())
     throw std::invalid_argument("Empty peer message");
@@ -37,12 +43,10 @@ std::vector<std::byte> PeerMessage::serialize() {
   std::vector<std::byte> message;
   message.reserve(4 + messageLength);
 
-  message.push_back(static_cast<std::byte>(messageLength >> 24));
-  message.push_back(static_cast<std::byte>(messageLength >> 16));
-  message.push_back(static_cast<std::byte>(messageLength >> 8));
-  message.push_back(static_cast<std::byte>(messageLength));
-  message.push_back(this->messageType);
+  std::vector<std::byte> messageLengthBytes = uint32ToBytes(messageLength);
 
+  message.insert(message.end(), messageLengthBytes.begin(), messageLengthBytes.end());
+  message.push_back(this->messageType);
   message.insert(message.end(), this->payload.begin(), this->payload.end());
 
   return message;

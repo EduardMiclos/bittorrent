@@ -6,6 +6,7 @@
 
 class Peer {
 public:
+  std::string uid;
   std::string ipAddress;
   uint16_t port;
 

@@ -42,8 +42,10 @@ private:
   std::vector<PeerConnection> peerConnections;
 
   std::vector<Piece> pieces;
+  std::vector<bool> pieceIsDownloaded;
 
   std::vector<std::jthread> peerThreads;
+  std::map<std::string, std::thread::id> threadsMap;
 
 public:
   std::string uid;

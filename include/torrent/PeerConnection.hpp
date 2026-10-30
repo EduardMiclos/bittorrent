@@ -1,6 +1,7 @@
 #include "networking/TcpStream.hpp"
 #include "torrent/Peer.hpp"
 #include "torrent/PeerMessage.hpp"
+#include "torrent/Piece.hpp"
 
 class PeerConnection {
 public:
@@ -14,6 +15,9 @@ public:
   bool amInterested = false;
   bool amChocking = true;
 
+  size_t outstandingRequests = 0;
+  const size_t MAX_OUTSTANDING_REQUESTS = 10;
+
   std::vector<bool> availablePieces;
 
   bool open();
@@ -21,7 +25,7 @@ public:
 
   std::size_t getNextMessageLength();
   PeerMessage receiveMessage();
-  bool sendMessage(PeerMessage &message);
+  bool sendMessage(PeerMessage message);
 
 public:
   PeerConnection(std::string ipAddress, uint16_t port);
@@ -32,4 +36,8 @@ public:
   bool hasPiece(uint32_t pieceIndex) const;
   void updateBitfield(const std::vector<std::byte> &payload);
   void handleHave(uint32_t pieceIndex);
+
+  Piece *getNextBestPiece(std::vector<Piece> &pieces, std::vector<bool> &pieceIsDownloaded);
+  void initPeerListener();
+  void initPeerTalker(std::vector<Piece> &pieces, std::vector<bool> &pieceIsDownloaded);
 };

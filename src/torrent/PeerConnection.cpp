@@ -1,4 +1,7 @@
+#include "Utils.hpp"
 #include "torrent/PeerConnection.hpp"
+#include "torrent/Piece.hpp"
+#include "torrent/TorrentClient.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -61,7 +64,7 @@ PeerMessage PeerConnection::receiveMessage() {
   return PeerMessage(message);
 }
 
-bool PeerConnection::sendMessage(PeerMessage &message) {
+bool PeerConnection::sendMessage(PeerMessage message) {
   if (!this->stream.isOpen) {
     std::cerr << "Cannot send message if connection is closed!";
     return false;
@@ -116,4 +119,91 @@ void PeerConnection::handleHave(const uint32_t pieceIndex) {
   }
 
   this->availablePieces[pieceIndex] = true;
+}
+
+void PeerConnection::initPeerListener() {
+  while (this->isConnected()) {
+    PeerMessage message = this->receiveMessage();
+
+    switch (message.messageType) {
+    case PeerMessageType::Bitfield:
+      this->updateBitfield(message.payload);
+      break;
+
+    case PeerMessageType::Have: {
+      uint32_t haveValue = bytesToUint32(message.payload);
+      this->handleHave(haveValue);
+      break;
+    }
+
+    case PeerMessageType::Piece: {
+    }
+
+    case PeerMessageType::Choke:
+      this->peerChoking = true;
+      break;
+
+    case PeerMessageType::Unchoke:
+      this->peerChoking = false;
+      break;
+
+    case PeerMessageType::Interested:
+      this->peerInterested = true;
+      // do something...?
+      break;
+
+    case PeerMessageType::Uninterested:
+      this->peerInterested = false;
+      // do something...?
+      break;
+
+    case PeerMessageType::Request:
+      // do something...?
+      break;
+
+    case PeerMessageType::Cancel:
+      // do something...?
+      break;
+
+    default:
+      break;
+    }
+  }
+}
+
+Piece *PeerConnection::getNextBestPiece(std::vector<Piece> &pieces, std::vector<bool> &pieceIsDownloaded) {
+  for (size_t pieceIndex = this->availablePieces[0]; pieceIndex < this->availablePieces.size(); pieceIndex++)
+    if (this->availablePieces[pieceIndex] && !pieceIsDownloaded[pieceIndex])
+      return &pieces[pieceIndex];
+
+  return nullptr;
+}
+
+void PeerConnection::initPeerTalker(std::vector<Piece> &pieces, std::vector<bool> &pieceIsDownloaded) {
+  while (this->isConnected()) {
+    if (!this->amInterested) {
+      this->sendMessage(PeerMessage(PeerMessageType::Interested));
+      this->amInterested = true;
+    }
+
+    if (!this->peerChoking && this->availablePieces.size()) {
+      if (this->outstandingRequests < MAX_OUTSTANDING_REQUESTS) {
+        Piece *nextPiece = this->getNextBestPiece(pieces, pieceIsDownloaded);
+
+        if (nextPiece != nullptr) {
+          auto chunkIndex = nextPiece->getNextChunk();
+
+          if (chunkIndex >= 0) {
+            auto request = nextPiece->serializeRequest(chunkIndex);
+            PeerMessage message = PeerMessage(PeerMessageType::Request, request);
+
+            if (this->sendMessage(message)) {
+              nextPiece->setChunk(chunkIndex, ChunkState::Requested);
+              this->outstandingRequests++;
+            }
+          }
+        }
+      }
+    }
+  }
 }

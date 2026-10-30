@@ -1,19 +1,20 @@
+#include "Utils.hpp"
 #include "torrent/Piece.hpp"
 #include <iostream>
 #include <math.h>
+#include <stdexcept>
 
 Piece::Piece(std::size_t length, std::string hash, int index) {
   this->length = length;
   this->hash = hash;
   this->index = index;
 
-  const size_t CHUNK_SIZE = 16 * 1024; // bytes
-  this->chunks.reserve(std::ceil(length / CHUNK_SIZE));
-
-  this->lastChunkSize = length - CHUNK_SIZE * (this->chunks.capacity() - 1);
+  this->chunks.resize(length / CHUNK_SIZE + ((length % CHUNK_SIZE) != 0));
+  this->lastChunkSize = length - CHUNK_SIZE * (this->chunks.size() - 1);
 }
 
 bool Piece::isChunkValid(size_t chunkIndex) { return this->chunks[chunkIndex] == ChunkState::Missing; }
+
 size_t Piece::getNextChunk() {
   for (size_t i = 0; i < this->chunks.size(); i++)
     if (this->chunks[i] == ChunkState::Missing)
@@ -21,6 +22,7 @@ size_t Piece::getNextChunk() {
 
   return -1;
 }
+
 bool Piece::setChunk(size_t chunkIndex, ChunkState state) {
   switch (state) {
   case ChunkState::Downloaded:
@@ -49,4 +51,30 @@ bool Piece::setChunk(size_t chunkIndex, ChunkState state) {
 
   this->chunks[chunkIndex] = state;
   return true;
+}
+
+size_t Piece::getChunkSizeAt(size_t chunkIndex) {
+  if (chunkIndex >= this->chunks.size())
+    throw std::out_of_range("Invalid chunk index");
+
+  return chunkIndex == this->chunks.size() - 1 ? this->lastChunkSize : CHUNK_SIZE;
+}
+
+std::vector<std::byte> Piece::serializeRequest(size_t chunkIndex) {
+
+  size_t begin = chunkIndex * CHUNK_SIZE;
+  size_t requestLength = this->getChunkSizeAt(chunkIndex);
+
+  std::vector<std::byte> serializedPiece;
+  serializedPiece.reserve(12);
+
+  std::vector<std::byte> indexBytes = uint32ToBytes(this->index);
+  std::vector<std::byte> beginBytes = uint32ToBytes(begin);
+  std::vector<std::byte> lengthBytes = uint32ToBytes(requestLength);
+
+  serializedPiece.insert(serializedPiece.end(), indexBytes.begin(), indexBytes.end());
+  serializedPiece.insert(serializedPiece.end(), beginBytes.begin(), beginBytes.end());
+  serializedPiece.insert(serializedPiece.end(), lengthBytes.begin(), lengthBytes.end());
+
+  return serializedPiece;
 }
