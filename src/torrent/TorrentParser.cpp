@@ -10,9 +10,7 @@
 
 TorrentParser::TorrentParser() { this->torrentPath = std::filesystem::path(); };
 
-TorrentParser::TorrentParser(std::string inputTorrent) {
-  this->torrentPath = std::filesystem::path(inputTorrent);
-};
+TorrentParser::TorrentParser(std::string inputTorrent) { this->torrentPath = std::filesystem::path(inputTorrent); };
 
 int TorrentParser::load() {
   std::cout << "Loading torrent file...\n";
@@ -52,13 +50,23 @@ int TorrentParser::load(std::string inputTorrent) {
   return this->load();
 };
 
-std::string TorrentParser::getTrackerURL() {
-  if (auto *dict = std::get_if<bencode::dict>(&this->torrentContent.base())) {
-    auto elem = this->torrentContent["announce"];
-    return std::get<bencode::string>(elem);
+template <typename T> std::optional<T> TorrentParser::findInDict(const bencode::data &data, const std::string &key) {
+  if (auto *dict = std::get_if<bencode::dict>(&data.base())) {
+    auto it = dict->find(key);
+
+    if (it != dict->end()) {
+      if (auto *value = std::get_if<T>(&it->second.base()))
+        return *value;
+    }
   }
 
-  return "";
+  return std::nullopt;
+}
+
+std::string TorrentParser::getTrackerURL() {
+  auto tracker = this->findInDict<std::string>(this->torrentContent, "announce");
+
+  return tracker.value_or("");
 };
 
 std::string TorrentParser::getInfoHash() {
@@ -92,8 +100,7 @@ std::string TorrentParser::getPieceHashAt(int pieceIndex) {
   if (pieceIndex >= this->pieceCount)
     return "";
 
-  return this->pieceHashes.substr(pieceIndex * PIECE_HASH_SIZE,
-                                  PIECE_HASH_SIZE);
+  return this->pieceHashes.substr(pieceIndex * PIECE_HASH_SIZE, PIECE_HASH_SIZE);
 }
 
 int TorrentParser::getPieceCount() { return this->pieceCount; }
@@ -133,9 +140,7 @@ std::size_t TorrentParser::_getPieceSize() {
   return pieceLength;
 }
 
-int TorrentParser::_getPieceCount() {
-  return this->pieceHashes.size() / PIECE_HASH_SIZE;
-}
+int TorrentParser::_getPieceCount() { return this->pieceHashes.size() / PIECE_HASH_SIZE; }
 
 std::string TorrentParser::_getPieceHashes() {
   std::string pieceHashes{};

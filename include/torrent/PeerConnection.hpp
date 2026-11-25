@@ -1,7 +1,10 @@
+#pragma once
+
 #include "networking/TcpStream.hpp"
 #include "torrent/Peer.hpp"
 #include "torrent/PeerMessage.hpp"
 #include "torrent/Piece.hpp"
+#include <stop_token>
 
 class PeerConnection {
 public:
@@ -38,6 +41,6 @@ public:
   void handleHave(uint32_t pieceIndex);
 
   Piece *getNextBestPiece(std::vector<Piece> &pieces, std::vector<bool> &pieceIsDownloaded);
-  void initPeerListener();
-  void initPeerTalker(std::vector<Piece> &pieces, std::vector<bool> &pieceIsDownloaded);
+  void initPeerListener(std::stop_token token);
+  void initPeerTalker(std::stop_token token, std::vector<Piece> &pieces, std::vector<bool> &pieceIsDownloaded);
 };

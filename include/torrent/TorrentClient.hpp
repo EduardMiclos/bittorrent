@@ -7,6 +7,7 @@
 #include "Tracker.hpp"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <thread>
 
@@ -29,7 +30,7 @@ class TorrentClient {
 private:
   TorrentParser parser;
 
-  Tracker tracker;
+  std::optional<Tracker> tracker;
   std::string infoHash;
 
   int64_t uploaded;
@@ -39,7 +40,7 @@ private:
 
   uint16_t listeningPort;
   std::vector<Peer> peers;
-  std::vector<PeerConnection> peerConnections;
+  std::vector<std::shared_ptr<PeerConnection>> peerConnections;
 
   std::vector<Piece> pieces;
   std::vector<bool> pieceIsDownloaded;
@@ -51,9 +52,12 @@ public:
   std::string uid;
 
   TorrentClient();
+  ~TorrentClient();
+  std::vector<Peer> getPeers();
   void setPeers(std::vector<Peer> peers);
   bool setTorrent(std::string torrentPath);
 
   void perPeerDownload(Peer &peer);
   void startDownload();
+  void stopDownload();
 };

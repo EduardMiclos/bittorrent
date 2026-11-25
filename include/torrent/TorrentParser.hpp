@@ -32,4 +32,6 @@ public:
   std::string getPieceHashAt(int pieceIndex);
   int getPieceCount();
   std::size_t getTotalSize();
+
+  template <typename T> std::optional<T> findInDict(const bencode::data &data, const std::string &key);
 };

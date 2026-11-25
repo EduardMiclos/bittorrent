@@ -1,5 +1,6 @@
+#pragma once
+
 #include <cstddef>
-#include <string>
 #include <vector>
 
 // based on: https://www.bittorrent.org/beps/bep_0003.html
@@ -44,7 +45,7 @@ public:
   std::vector<std::byte> payload;
 
 public:
-  PeerMessage();
+  PeerMessage() = default;
   PeerMessage(std::byte messageType);
   PeerMessage(const std::vector<std::byte> &message);
   PeerMessage(std::byte messageType, std::vector<std::byte> message);

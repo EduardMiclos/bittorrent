@@ -1,9 +1,10 @@
-#include "Utils.hpp"
 #include "torrent/PeerConnection.hpp"
+#include "Utils.hpp"
 #include "torrent/Piece.hpp"
 #include "torrent/TorrentClient.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <stop_token>
 
 PeerConnection::PeerConnection(std::string ipAddress, uint16_t port) {
   this->ipAddress = ipAddress;
@@ -56,6 +57,9 @@ PeerMessage PeerConnection::receiveMessage() {
 
   std::size_t messageLength = this->getNextMessageLength();
   std::vector<std::byte> message = this->stream.readExactBytes(messageLength);
+
+  // std::cout < < < < '\n';
+
   if (message.size() != messageLength) {
     std::cerr << "Peer response truncated";
     return {};
@@ -121,8 +125,8 @@ void PeerConnection::handleHave(const uint32_t pieceIndex) {
   this->availablePieces[pieceIndex] = true;
 }
 
-void PeerConnection::initPeerListener() {
-  while (this->isConnected()) {
+void PeerConnection::initPeerListener(std::stop_token token) {
+  while (!token.stop_requested() && this->isConnected()) {
     PeerMessage message = this->receiveMessage();
 
     switch (message.messageType) {
@@ -179,8 +183,9 @@ Piece *PeerConnection::getNextBestPiece(std::vector<Piece> &pieces, std::vector<
   return nullptr;
 }
 
-void PeerConnection::initPeerTalker(std::vector<Piece> &pieces, std::vector<bool> &pieceIsDownloaded) {
-  while (this->isConnected()) {
+void PeerConnection::initPeerTalker(std::stop_token token, std::vector<Piece> &pieces,
+                                    std::vector<bool> &pieceIsDownloaded) {
+  while (!token.stop_requested() && this->isConnected()) {
     if (!this->amInterested) {
       this->sendMessage(PeerMessage(PeerMessageType::Interested));
       this->amInterested = true;

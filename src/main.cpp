@@ -133,10 +133,14 @@ void peerCommunication() {
 */
 
 int main() {
-  // peerCommunication();
+  TorrentClient torrentClient = TorrentClient();
+  bool torrentParseSuccess = torrentClient.setTorrent("input/mock/test2.torrent");
 
-  // torrentClient.setTorrent("input/alicesadventures19033gut.torrent");
-  // torrentClient.setTorrent("/tmp/test.torrent");
+  if (torrentParseSuccess) {
+    if (torrentClient.getPeers().size() <= 0)
+      torrentClient.setPeers({Peer("127.0.0.1", 51413)});
+    torrentClient.startDownload();
+  }
 
   return 0;
 }

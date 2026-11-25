@@ -38,6 +38,17 @@ PeerMessage::PeerMessage(const std::vector<std::byte> &message) {
   this->payload = std::vector(message.begin() + 1, message.end());
 }
 
+PeerMessage::PeerMessage(std::byte messageType, const std::vector<std::byte> message) {
+  if (message.empty())
+    throw std::invalid_argument("Empty peer message");
+
+  if (!isValidMessageType(messageType))
+    throw std::invalid_argument("Unsupported peer message type");
+
+  this->messageType = messageType;
+  this->payload = message;
+}
+
 std::vector<std::byte> PeerMessage::serialize() {
   uint32_t messageLength = 1 + payload.size();
   std::vector<std::byte> message;
